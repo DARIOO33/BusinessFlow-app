@@ -1,0 +1,20 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+next-env.d.ts
+
+# prisma generated client (rebuilt by `npm install` / `npm run build`)
+src/generated/
+
+# env files (keep .env.example)
+.env
+.env.*
+!.env.example
+
+# misc
+.DS_Store
+*.log
+*.tsbuildinfo
