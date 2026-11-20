@@ -14,5 +14,5 @@ export function proxy(request: NextRequest) {
 
 // Pages that need a logged-in user
 export const config = {
-  matcher: ["/dashboard/:path*"],
+  matcher: ["/dashboard/:path*", "/team/:path*", "/settings/:path*", "/onboarding"],
 };

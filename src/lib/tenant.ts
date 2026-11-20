@@ -2,21 +2,15 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { HttpError } from "@/lib/http";
-import type { Role } from "@/generated/prisma/client";
+import { hasRole, ROLES, type Role } from "@/lib/roles";
+
+export { hasRole, ROLES };
 
 // Multi-tenancy rules, used by every API route.
 //
 // The "active company" is stored on the session (session.activeCompanyId).
 // Routes NEVER trust a companyId sent by the client for reading/writing data:
 // they always use the companyId returned by requireCompany().
-
-export const ROLES = ["MEMBER", "ADMIN", "OWNER"] as const;
-
-const RANK: Record<Role, number> = { MEMBER: 1, ADMIN: 2, OWNER: 3 };
-
-export function hasRole(role: Role, minRole: Role) {
-  return RANK[role] >= RANK[minRole];
-}
 
 // 401 if not signed in.
 export async function requireUser() {

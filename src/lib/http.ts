@@ -26,6 +26,10 @@ export function api<Ctx>(handler: (req: NextRequest, ctx: Ctx) => Promise<Respon
       if (isPrismaError(err, "P2002")) {
         return Response.json({ error: "This value already exists" }, { status: 409 });
       }
+      // Prisma "foreign key constraint failed" (e.g. deleting a contact that has invoices)
+      if (isPrismaError(err, "P2003")) {
+        return Response.json({ error: "This record is still used by other records" }, { status: 409 });
+      }
       console.error(err);
       return Response.json({ error: "Server error" }, { status: 500 });
     }
@@ -98,4 +102,66 @@ export function oneOf<T extends string>(value: unknown, options: readonly T[], k
     throw new HttpError(400, `"${key}" must be one of: ${options.join(", ")}`);
   }
   return value as T;
+}
+
+// Optional enum value: undefined when not sent.
+export function optionalOneOf<T extends string>(body: Body, key: string, options: readonly T[]): T | undefined {
+  return body[key] === undefined ? undefined : oneOf(body[key], options, key);
+}
+
+// An id field linking to another record.
+//   undefined -> not sent, null -> clear the link, string -> the id
+export function refId(body: Body, key: string): string | null | undefined {
+  const value = body[key];
+  if (value === undefined) return undefined;
+  if (value === null || value === "") return null;
+  if (typeof value !== "string" || value.length > 100) throw new HttpError(400, `"${key}" must be an id`);
+  return value;
+}
+
+// A date ("2026-12-31" or a full ISO date). null or "" clears it.
+export function dateField(body: Body, key: string): Date | null | undefined {
+  const value = body[key];
+  if (value === undefined) return undefined;
+  if (value === null || value === "") return null;
+  const date = typeof value === "string" ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) {
+    throw new HttpError(400, `"${key}" must be a date like 2026-12-31`);
+  }
+  return date;
+}
+
+// Money: a number or numeric string, 0 or more, max 2 decimals. Returned as a string for Prisma Decimal.
+export function money(body: Body, key: string): string | undefined {
+  const value = body[key];
+  if (value === undefined) return undefined;
+  const text = typeof value === "number" ? String(value) : value;
+  if (typeof text !== "string" || !/^\d{1,10}(\.\d{1,2})?$/.test(text.trim())) {
+    throw new HttpError(400, `"${key}" must be an amount like 1500 or 1500.50`);
+  }
+  return text.trim();
+}
+
+// A whole number >= 0.
+export function wholeNumber(body: Body, key: string, { required = false } = {}): number | undefined {
+  const value = body[key];
+  if (value === undefined && !required) return undefined;
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
+    throw new HttpError(400, `"${key}" must be a whole number, 0 or more`);
+  }
+  return value;
+}
+
+// ?page=2&pageSize=25 -> { page, pageSize, skip }
+export function pageParams(req: NextRequest, defaultSize = 25) {
+  const page = Math.max(1, Number.parseInt(req.nextUrl.searchParams.get("page") ?? "1", 10) || 1);
+  const size = Number.parseInt(req.nextUrl.searchParams.get("pageSize") ?? String(defaultSize), 10);
+  const pageSize = Math.min(100, Math.max(1, size || defaultSize));
+  return { page, pageSize, skip: (page - 1) * pageSize };
+}
+
+// ?q=... trimmed, or undefined when empty
+export function searchParam(req: NextRequest, key = "q") {
+  const value = req.nextUrl.searchParams.get(key)?.trim();
+  return value ? value.slice(0, 100) : undefined;
 }

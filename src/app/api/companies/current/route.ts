@@ -27,7 +27,7 @@ export const PATCH = api(async (req) => {
   const currency = text(body, "currency", { max: 3 });
   if (currency === null) throw new HttpError(400, `"currency" cannot be empty`);
   if (currency !== undefined && !/^[A-Z]{3}$/.test(currency)) {
-    throw new HttpError(400, `"currency" must be a 3-letter code like TND, EUR, USD`);
+    throw new HttpError(400, `"currency" must be a 3-letter code like USD, EUR, GBP`);
   }
 
   const company = await prisma.company.update({

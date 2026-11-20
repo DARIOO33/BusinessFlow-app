@@ -1,18 +1,106 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #0f172a;
-}
+/* BusinessFlow "departure board" theme.
+   Dark board (sidebar, auth panel) + light work area + signal yellow.
+   Use as Tailwind classes: bg-board, text-flap, bg-signal, font-cond, ... */
+@theme inline {
+  --color-board: #111315;
+  --color-tile: #1d2024;
+  --color-tile-active: #23272b;
+  --color-board-line: #3a3f45;
+  --color-board-divider: #2a2e33;
+  --color-flap: #f2efe6;
+  --color-board-text: #c9cdd1;
+  --color-board-muted: #a9afb6;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0b0f17;
-    --foreground: #e5e7eb;
-  }
+  --color-signal: #f5c518;
+  --color-ok: #8fe0b0;
+  --color-alarm: #b3261e;
+
+  --color-ground: #f4f5f3;
+  --color-panel-head: #f8f8f6;
+  --color-line: #daddda;
+  --color-line-soft: #ecedea;
+  --color-line-strong: #c8ccc9;
+  --color-ink: #15171a;
+  --color-muted: #4a5057;
+  --color-subtle: #5a6068;
+
+  --color-danger: #9a1f17;
+  --color-danger-line: #e2a39e;
+  --color-danger-bg: #fcedec;
+
+  --font-sans: var(--font-barlow), system-ui, sans-serif;
+  --font-cond: var(--font-barlow-condensed), var(--font-barlow), sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-ground);
+  color: var(--color-ink);
+  font-size: 15px;
+}
+
+::selection {
+  background: var(--color-signal);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}
+.on-board :focus-visible {
+  outline-color: var(--color-signal);
+}
+
+/* Split-flap tile: uppercase condensed text with a hairline across the middle */
+@layer components {
+  .tile {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 8px;
+    border-radius: 3px;
+    background: var(--color-tile);
+    color: var(--color-flap);
+    font-family: var(--font-cond);
+    font-weight: 600;
+    font-size: 13px;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .tile::after {
+    content: "";
+    position: absolute;
+    inset: 50% 0 auto 0;
+    height: 1px;
+    background: rgb(0 0 0 / 0.6);
+  }
+  .tile-flip {
+    animation: tile-flip 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+}
+
+@keyframes tile-flip {
+  from {
+    transform: perspective(300px) rotateX(-90deg);
+  }
+  to {
+    transform: perspective(300px) rotateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile-flip {
+    animation: none;
+  }
+}
+
+/* Native <dialog> backdrop */
+dialog::backdrop {
+  background: rgb(17 19 21 / 0.55);
 }
