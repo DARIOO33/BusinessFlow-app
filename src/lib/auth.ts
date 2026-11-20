@@ -10,6 +10,12 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  session: {
+    additionalFields: {
+      // Company the user is currently working in. Set by the server only.
+      activeCompanyId: { type: "string", required: false, input: false },
+    },
+  },
   // Add Google, GitHub... here later:
   // socialProviders: { google: { clientId: "...", clientSecret: "..." } },
   plugins: [nextCookies()], // keep this last
